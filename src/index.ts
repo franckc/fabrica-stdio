@@ -1,19 +1,18 @@
-#!/usr/bin/env node
+console.error('Fabrica Bridge Server init....');
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import * as fs from "fs";
-import path from "path";
-
+} from '@modelcontextprotocol/sdk/types.js';
+import * as fs from 'fs';
+import path from 'path';
 
 const FABRICA_TOOLBOX_BASE = 'http://localhost:3000/api/mcp/';
 
 // Set up file logging
-const LOG_PATH=  '/Users/franck/src/fabrica/stdio_connector/';
+const LOG_PATH = '/Users/franck/src/fabrica/fabrica-stdio/';
 const LOG_FILE = 'fabrica.log';
 const logFile = path.join(LOG_PATH, LOG_FILE);
 
@@ -29,6 +28,7 @@ function logToFile(message: string) {
   fs.appendFileSync(logFile, logEntry);
 }
 
+logToFile('Fabrica Bridge Server starting');
 
 // Define a simpler type for the tool input schema
 // Was: type ToolInput = z.infer<typeof ToolInputSchema>;
@@ -37,8 +37,8 @@ type ToolInput = Record<string, unknown>;
 // Server setup
 const server = new Server(
   {
-    name: "fabrica-stdio",
-    version: "0.2.0",
+    name: 'fabrica-stdio',
+    version: '0.2.0',
   },
   {
     capabilities: {
@@ -49,41 +49,40 @@ const server = new Server(
 
 // ListTools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  logToFile("Fetching tools list...");
+  logToFile('Fetching tools list...');
   try {
     const response = await fetch(FABRICA_TOOLBOX_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream, application/json'
+        Accept: 'text/event-stream, application/json',
       },
       body: JSON.stringify({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tools/list",
-        "params": {}
-      })
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/list',
+        params: {},
+      }),
     });
     if (!response.ok) {
-      logToFile(`Error fetching tools list: ${response.status} ${response.statusText}`);
+      logToFile(
+        `Error fetching tools list: ${response.status} ${response.statusText}`,
+      );
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
-    const data = await response.json();
+    const data = (await response.json()) as { result: { tools: any[] } };
     const tools = data.result.tools;
     logToFile(`Tools list fetched: ${JSON.stringify(tools)}`);
     return { tools };
-  }
-  catch (error) {
+  } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logToFile(`Error fetching tools list: ${errorMessage}`);
     return {
-      content: [{ type: "text", text: `Error: ${errorMessage}` }],
+      content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
     };
   }
-
 });
-
 
 // CallTool handler
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -95,27 +94,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream, application/json'
+        Accept: 'text/event-stream, application/json',
       },
       body: JSON.stringify({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tools/call",
-        "params": { name, arguments: args }
-      })
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name, arguments: args },
+      }),
     });
     if (!response.ok) {
-      logToFile(`Error fetching tools list: ${response.status} ${response.statusText}`);
+      logToFile(
+        `Error fetching tools list: ${response.status} ${response.statusText}`,
+      );
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
-    const data = await response.json();
+    const data = (await response.json()) as { result: any };
     logToFile(`Tool response: ${JSON.stringify(data)}`);
     return data.result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logToFile(`Error processing request: ${errorMessage}`);
     return {
-      content: [{ type: "text", text: `Error: ${errorMessage}` }],
+      content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
     };
   }
@@ -123,10 +124,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start server
 async function runServer() {
-  console.log("Starting server...");
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  logToFile("Fabrica Bridge Server running on stdio");
+  logToFile('Fabrica Bridge Server running on stdio');
 }
 // Parse command line arguments
 const argv = process.argv.slice(2); // Remove node and script path
@@ -134,8 +134,12 @@ const utbid = argv[0]; // Extract the first argument
 
 // Check if UTBID is provided
 if (!utbid) {
-  logToFile("Error: No UTBID provided. Please provide a UTBID as the first argument.");
-  console.error("Error: No UTBID provided. Please provide a UTBID as the first argument.");
+  logToFile(
+    'Error: No UTBID provided. Please provide a UTBID as the first argument.',
+  );
+  console.error(
+    'Error: No UTBID provided. Please provide a UTBID as the first argument.',
+  );
   process.exit(1);
 }
 

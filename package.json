@@ -1,16 +1,31 @@
 {
-  "name": "stdio_connector",
+  "name": "@fabrica.work/cli",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Fabrica MCP CLI",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "format": "prettier --write .",
+    "start": "node dist/index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Fabrica",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/franckc/fabrica-stdio.git"
+  },
   "license": "ISC",
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3"
   }
 }
