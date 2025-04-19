@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Fabrica MCP CLI",
   "main": "dist/index.js",
+  "bin": {
+    "fabrica": "./dist/index.js"
+  },
   "files": [
     "dist"
   ],
