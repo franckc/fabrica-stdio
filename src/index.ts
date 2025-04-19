@@ -12,7 +12,7 @@ import path from 'path';
 const FABRICA_TOOLBOX_BASE = 'http://localhost:3000/api/mcp/';
 
 // Set up file logging
-const LOG_PATH = '/Users/franck/src/fabrica/fabrica-stdio/';
+const LOG_PATH = './';
 const LOG_FILE = 'fabrica.log';
 const logFile = path.join(LOG_PATH, LOG_FILE);
 
