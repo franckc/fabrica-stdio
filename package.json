@@ -1,17 +1,20 @@
 {
   "name": "@fabrica.work/cli",
-  "version": "1.0.3",
+  "version": "1.0.8",
   "description": "Fabrica MCP CLI",
+  "homepage": "https://fabrica.work",
   "main": "./dist/index.js",
   "bin": {
     "fabrica": "./dist/index.js"
   },
   "files": [
-    "dist"
-  ],
+		"dist",
+		"package.json",
+    "README.md"
+	],
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "format": "prettier --write .",
     "start": "node dist/index.js"
   },

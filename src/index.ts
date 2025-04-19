@@ -6,29 +6,9 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import * as fs from 'fs';
-import path from 'path';
 
 const FABRICA_TOOLBOX_BASE = 'http://localhost:3000/api/mcp/';
 
-// Set up file logging
-const LOG_PATH = './';
-const LOG_FILE = 'fabrica.log';
-const logFile = path.join(LOG_PATH, LOG_FILE);
-
-// Ensure log directory exists
-if (!fs.existsSync(LOG_PATH)) {
-  fs.mkdirSync(LOG_PATH, { recursive: true });
-}
-
-// Create a logging function
-function logToFile(message: string) {
-  const timestamp = new Date().toISOString();
-  const logEntry = `[${timestamp}] ${message}\n`;
-  fs.appendFileSync(logFile, logEntry);
-}
-
-logToFile('Fabrica Bridge Server starting');
 
 // Define a simpler type for the tool input schema
 // Was: type ToolInput = z.infer<typeof ToolInputSchema>;
@@ -49,7 +29,7 @@ const server = new Server(
 
 // ListTools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  logToFile('Fetching tools list...');
+  console.error('Fetching tools list...');
   try {
     const response = await fetch(FABRICA_TOOLBOX_URL, {
       method: 'POST',
@@ -65,18 +45,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       }),
     });
     if (!response.ok) {
-      logToFile(
+      console.error(
         `Error fetching tools list: ${response.status} ${response.statusText}`,
       );
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
     const data = (await response.json()) as { result: { tools: any[] } };
     const tools = data.result.tools;
-    logToFile(`Tools list fetched: ${JSON.stringify(tools)}`);
+    console.error(`Tools list fetched: ${JSON.stringify(tools)}`);
     return { tools };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logToFile(`Error fetching tools list: ${errorMessage}`);
+    console.error(`Error fetching tools list: ${errorMessage}`);
     return {
       content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
@@ -89,7 +69,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const { name, arguments: args } = request.params;
 
-    logToFile(`Calling tool: ${name} with args=${JSON.stringify(args)}`);
+    console.error(`Calling tool: ${name} with args=${JSON.stringify(args)}`);
     const response = await fetch(FABRICA_TOOLBOX_URL, {
       method: 'POST',
       headers: {
@@ -104,17 +84,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }),
     });
     if (!response.ok) {
-      logToFile(
+      console.error(
         `Error fetching tools list: ${response.status} ${response.statusText}`,
       );
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
     const data = (await response.json()) as { result: any };
-    logToFile(`Tool response: ${JSON.stringify(data)}`);
+    console.error(`Tool response: ${JSON.stringify(data)}`);
     return data.result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logToFile(`Error processing request: ${errorMessage}`);
+    console.error(`Error processing request: ${errorMessage}`);
     return {
       content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
@@ -126,7 +106,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  logToFile('Fabrica Bridge Server running on stdio');
+  console.error('Fabrica Bridge Server running on stdio');
 }
 // Parse command line arguments
 const argv = process.argv.slice(2); // Remove node and script path
@@ -134,9 +114,6 @@ const utbid = argv[0]; // Extract the first argument
 
 // Check if UTBID is provided
 if (!utbid) {
-  logToFile(
-    'Error: No UTBID provided. Please provide a UTBID as the first argument.',
-  );
   console.error(
     'Error: No UTBID provided. Please provide a UTBID as the first argument.',
   );
@@ -147,6 +124,6 @@ if (!utbid) {
 let FABRICA_TOOLBOX_URL = `${FABRICA_TOOLBOX_BASE}${utbid}`;
 
 runServer().catch((error) => {
-  logToFile(`Fatal error running server: ${error}`);
+  console.error(`Fatal error running server: ${error}`);
   process.exit(1);
 });
