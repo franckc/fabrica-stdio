@@ -5,18 +5,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  ToolSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "fs";
 import path from "path";
-import os from 'os';
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { minimatch } from 'minimatch';
 
-const FABRICA_TOOLBOX_URL = 'http://localhost:3000/api/mcp/k8R9I7cOCfwHCgH29JPo0Lo6Sh5r1FItY6Esj-ROlGm6'
 
-// logging to a tool
+const FABRICA_TOOLBOX_BASE = 'http://localhost:3000/api/mcp/';
+
 // Set up file logging
 const LOG_PATH=  '/Users/franck/src/fabrica/stdio_connector/';
 const LOG_FILE = 'fabrica.log';
@@ -52,21 +47,6 @@ const server = new Server(
   },
 );
 
-
-// Define interface for remote tool data
-interface RemoteTool {
-  name: string;
-  description: string;
-  inputSchema: Record<string, any>;
-}
-
-// Define return type for the function
-interface Tool {
-  name: string;
-  description: string;
-  inputSchema: ToolInput;
-}
-
 // ListTools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   logToFile("Fetching tools list...");
@@ -89,7 +69,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
     const data = await response.json();
-    const tools = data.result.tools as RemoteTool[];
+    const tools = data.result.tools;
     logToFile(`Tools list fetched: ${JSON.stringify(tools)}`);
     return { tools };
   }
@@ -148,6 +128,19 @@ async function runServer() {
   await server.connect(transport);
   logToFile("Fabrica Bridge Server running on stdio");
 }
+// Parse command line arguments
+const argv = process.argv.slice(2); // Remove node and script path
+const utbid = argv[0]; // Extract the first argument
+
+// Check if UTBID is provided
+if (!utbid) {
+  logToFile("Error: No UTBID provided. Please provide a UTBID as the first argument.");
+  console.error("Error: No UTBID provided. Please provide a UTBID as the first argument.");
+  process.exit(1);
+}
+
+// Set the full toolbox URL with the UTBID
+let FABRICA_TOOLBOX_URL = `${FABRICA_TOOLBOX_BASE}${utbid}`;
 
 runServer().catch((error) => {
   logToFile(`Fatal error running server: ${error}`);
