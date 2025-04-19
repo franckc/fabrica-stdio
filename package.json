@@ -1,8 +1,8 @@
 {
   "name": "@fabrica.work/cli",
-  "version": "1.0.2",
+  "version": "0.1.0",
   "description": "Fabrica MCP CLI",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "bin": {
     "fabrica": "./dist/index.js"
   },
