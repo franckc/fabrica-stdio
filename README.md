@@ -54,23 +54,34 @@ npx -y @modelcontextprotocol/inspector npx @fabrica.work/cli@latest <utbid>
 
 Replace `<utbid>` with the appropriate identifier for your use case.
 
-## Environment variables
+### Environment variables
 
 FABRICA_TOOLBOX_BASEURL
 Set to something like `http://localhost:3000/api/mcp` to use a local gateway server during development.
+
+
+### Publishing the npm package
+Increment the version in package.json
+```
+pnpm publish
+```
 
 ## Troubleshooting
 
 ### Logs
 
-Check logs for troubleshooting under:
+Check logs for troubleshooting under
 
+  - Claude:
 ```
 /Users/<username>/Library/Logs/Claude
 ```
+  - Cursor
+TBD
+  - Windsurf
+TBD
 
 ### Common Issues
-
 
 
 ## Contributing
