@@ -8,6 +8,11 @@ This is a bridge for clients like **Claude Desktop**, **Cursor**, and **Windsurf
 
 ### Install for Claude
 
+Get your unique Toolbox ID (utbid) from Fabrica's gateway UI.
+Then open a terminal and run:
+```
+npx @fabrica.work/cli@latest install claude <utbid>
+```
 This should add an entry to Claude's MCP config under:
 
 ```
@@ -16,13 +21,30 @@ This should add an entry to Claude's MCP config under:
 
 ### Install for Cursor
 
-Provide specific installation instructions here if applicable.
+TODO
 
 ### Install for Windsurf
 
-Provide specific installation instructions here if applicable.
+TODO
 
 ## Development
+
+### Running from local sources
+
+Compile:
+```
+pnpm run build
+```
+
+To run the server:
+```
+npm exec fabrica server
+```
+
+To run the installation
+```
+npm exec fabrica cli install claude myutbid
+```
 
 To run under the MCP inspector, use the following command:
 
@@ -49,11 +71,7 @@ Check logs for troubleshooting under:
 
 ### Common Issues
 
-- **Issue:** Unable to connect to the MCP gateway.  
-  **Solution:** Verify your network connection and ensure the MCP gateway URL is correctly configured.
 
-- **Issue:** Missing dependencies.  
-  **Solution:** Run `npm install` to ensure all required dependencies are installed.
 
 ## Contributing
 
