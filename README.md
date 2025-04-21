@@ -97,7 +97,8 @@ TBD
   - Windsurf
 TBD
 
-### Common Issues
+### General
+Refer to https://modelcontextprotocol.io/docs/tools/debugging
 
 
 ## Contributing

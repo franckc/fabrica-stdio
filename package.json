@@ -20,7 +20,9 @@
     "fabrica": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
