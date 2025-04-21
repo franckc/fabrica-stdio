@@ -1,37 +1,37 @@
 {
   "name": "@fabrica.work/cli",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Fabrica MCP CLI",
   "homepage": "https://fabrica.work",
-  "main": "./dist/index.js",
-  "bin": {
-    "fabrica": "./dist/index.js"
-  },
-  "files": [
-		"dist",
-		"package.json",
-    "README.md"
-	],
-  "type": "module",
-  "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
-    "format": "prettier --write .",
-    "start": "node dist/index.js"
-  },
-  "keywords": [],
   "author": "Fabrica",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/franckc/fabrica-stdio.git"
   },
-  "license": "ISC",
-  "packageManager": "pnpm@10.7.1",
+  "keywords": [
+    "fabrica",
+    "cli",
+    "mcp",
+    "modelcontextprotocol"
+  ],  
+  "type": "module",
+  "bin": {
+    "fabrica": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.0"
+    "@modelcontextprotocol/sdk": "1.0.1"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3"
+    "shx": "^0.3.4",
+    "typescript": "^5.6.2"
   }
 }
