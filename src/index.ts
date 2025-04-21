@@ -135,6 +135,7 @@ async function runInstall(clientName: string, utbid: string) {
         "args": [
           "-y",
           "@fabrica.work/cli@latest",
+          "server",
           utbid
         ]
       };

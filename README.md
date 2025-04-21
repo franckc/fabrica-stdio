@@ -6,24 +6,40 @@ This is a bridge for clients like **Claude Desktop**, **Cursor**, and **Windsurf
 
 ## Installation
 
+### pre-requisite
+Get your unique Toolbox ID (utbid) from Fabrica's gateway UI.
+
+
 ### Install for Claude
 
-Get your unique Toolbox ID (utbid) from Fabrica's gateway UI.
-Then open a terminal and run:
+Open a terminal and run:
 ```
 npx @fabrica.work/cli@latest install claude <utbid>
 ```
 This should add an entry to Claude's MCP config under:
-
 ```
-/Users/<username>/Library/Application Support/Claude/claude_desktop_config.json
+~/Library/Application Support/Claude/claude_desktop_config.json
 ```
+Make sure to restart the Claude desktop app for the changes to take effect.
 
 ### Install for Cursor
 
 TODO
 
 ### Install for Windsurf
+
+### install for VSCode
+
+Follow instructions at: https://code.visualstudio.com/docs/copilot/chat/mcp-servers
+The command to run to start the server is:
+```
+npx -y @fabrica.work/cli@latest server <utbid>>
+```
+
+Note: if installed as a global server (vs workspace), the settings are under
+```
+~/Library/Application Support/Code/User/settings.json
+```
 
 TODO
 
@@ -49,7 +65,7 @@ npm exec fabrica cli install claude myutbid
 To run under the MCP inspector, use the following command:
 
 ```bash
-npx -y @modelcontextprotocol/inspector npx @fabrica.work/cli@latest <utbid>
+npx -y @modelcontextprotocol/inspector npx @fabrica.work/cli@latest server <utbid>
 ```
 
 Replace `<utbid>` with the appropriate identifier for your use case.
