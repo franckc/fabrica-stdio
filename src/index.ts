@@ -7,18 +7,22 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-const FABRICA_TOOLBOX_BASE = 'http://localhost:3000/api/mcp/';
+const FABRICA_GATEWAY_URL = process.env.FABRICA_GATEWAY_URL || 'https://app.fabrica.work/api/mcp';
+let FABRICA_TOOLBOX_URL = '';
 
-
-// Define a simpler type for the tool input schema
-// Was: type ToolInput = z.infer<typeof ToolInputSchema>;
 type ToolInput = Record<string, unknown>;
+
+// Logging function. Note: we log to stderr to avoid interfering with stdout since that's
+// used as the MCP transport between the local client and this server.
+function log(message: string): void {
+  console.error(`[Fabrica Bridge]: ${message}`);
+}
 
 // Server setup
 const server = new Server(
   {
     name: 'fabrica-stdio',
-    version: '0.2.0',
+    version: '0.9.0',
   },
   {
     capabilities: {
@@ -29,7 +33,7 @@ const server = new Server(
 
 // ListTools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  console.error('Fetching tools list...');
+  log('Fetching tools list...');
   try {
     const response = await fetch(FABRICA_TOOLBOX_URL, {
       method: 'POST',
@@ -45,18 +49,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       }),
     });
     if (!response.ok) {
-      console.error(
-        `Error fetching tools list: ${response.status} ${response.statusText}`,
-      );
+      log(`Error fetching tools list: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
     const data = (await response.json()) as { result: { tools: any[] } };
     const tools = data.result.tools;
-    console.error(`Tools list fetched: ${JSON.stringify(tools)}`);
+    log(`Tools list fetched: ${JSON.stringify(tools)}`);
     return { tools };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Error fetching tools list: ${errorMessage}`);
+    log(`Error fetching tools list: ${errorMessage}`);
     return {
       content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
@@ -69,7 +71,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const { name, arguments: args } = request.params;
 
-    console.error(`Calling tool: ${name} with args=${JSON.stringify(args)}`);
+    log(`Calling tool: ${name} with args=${JSON.stringify(args)}`);
     const response = await fetch(FABRICA_TOOLBOX_URL, {
       method: 'POST',
       headers: {
@@ -84,17 +86,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }),
     });
     if (!response.ok) {
-      console.error(
-        `Error fetching tools list: ${response.status} ${response.statusText}`,
-      );
+      log(`Error fetching tools list: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to fetch tools list: ${response.statusText}`);
     }
     const data = (await response.json()) as { result: any };
-    console.error(`Tool response: ${JSON.stringify(data)}`);
+    log(`Tool response: ${JSON.stringify(data)}`);
     return data.result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Error processing request: ${errorMessage}`);
+    log(`Error processing request: ${errorMessage}`);
     return {
       content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
@@ -102,28 +102,108 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Start server
+// Function to start the server
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Fabrica Bridge Server running on stdio');
+  log('Fabrica Bridge Server running on stdio');
 }
+
+
+// Function to install Fabrica Bridge for specified client
+async function runInstall(clientName: string, utbid: string) {
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const os = await import('node:os');
+
+  if (clientName === 'claude') {
+    const configPath = path.join(os.homedir(), 'Library/Application Support/Claude/claude_desktop_config.json');
+    
+    try {
+      // Read the existing config file
+      const configData = await fs.readFile(configPath, 'utf8');
+      const config = JSON.parse(configData);
+      
+      // Ensure mcpServers object exists
+      if (!config.mcpServers) {
+        config.mcpServers = {};
+      }
+      
+      // Add or update the Fabrica-stdio entry
+      config.mcpServers["Fabrica-stdio"] = {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@fabrica.work/cli@latest",
+          utbid
+        ]
+      };
+      
+      // Write the updated config back to the file
+      await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');
+      log(`Successfully installed Fabrica Bridge for Claude`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log(`Error installing for Claude: ${errorMessage}`);
+      throw error;
+    }
+  } else {
+    log(`Installation not yet implemented for client: ${clientName}`);
+    throw new Error(`Installation not yet implemented for client: ${clientName}`);
+  }
+}
+
 // Parse command line arguments
 const argv = process.argv.slice(2); // Remove node and script path
-const utbid = argv[0]; // Extract the first argument
-
-// Check if UTBID is provided
-if (!utbid) {
-  console.error(
-    'Error: No UTBID provided. Please provide a UTBID as the first argument.',
-  );
+const command = argv[0]; // Extract the command (server or cli)
+if (!command) {
+  log('Error: No command provided. Please specify either "server" or "cli" as the first argument.');
   process.exit(1);
 }
 
-// Set the full toolbox URL with the UTBID
-let FABRICA_TOOLBOX_URL = `${FABRICA_TOOLBOX_BASE}${utbid}`;
+if (command === 'server') {
+  const utbid = argv[1]; // Extract the UTBID (2nd argument)  
+  if (!utbid) {
+    log('Error: No UTBID provided. Please provide a UTBID as the second argument when using "server" command.');
+    process.exit(1);
+  }
+  
+  // Set the full toolbox URL with the UTBID
+  FABRICA_TOOLBOX_URL = `${FABRICA_GATEWAY_URL}/${utbid}`;
+  
+  runServer().catch((error) => {
+    log(`Fatal error running server: ${error}`);
+    process.exit(1);
+  });
 
-runServer().catch((error) => {
-  console.error(`Fatal error running server: ${error}`);
+} else if (command === 'cli') {
+  const action = argv[1]; // Extract the action (2nd argument)
+  if (!action) {
+    log('Error: No action provided. Please specify an action (e.g., "install") as the second argument when using "cli" command.');
+    process.exit(1);
+  }
+  
+  if (action === 'install') {
+    const clientName = argv[2];
+    const utbid = argv[3];
+    if (!['claude', 'cursor', 'windsurf'].includes(clientName)) {
+      log('Error: Invalid client name. Supported clients are: claude, cursor, windsurf');
+      process.exit(1);
+    }
+    if (!utbid) {
+      log('Error: No Fabrica Toolbox ID provided.');
+      process.exit(1);
+    }
+    
+    log(`Installing for client: ${clientName}`);
+    runInstall(clientName, argv[3])
+  } else {
+    log(`Error: Unsupported action "${action}". Currently only "install" is supported.`);
+    process.exit(1);
+  }
+
+} else {
+  log(`Error: Invalid command "${command}". Please specify either "server" or "cli".`);
   process.exit(1);
-});
+}
+
