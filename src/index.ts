@@ -8,7 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 const FABRICA_GATEWAY_URL = process.env.FABRICA_GATEWAY_URL || 'https://app.fabrica.work/api/mcp';
-let FABRICA_TOOLBOX_URL = '';
+let FABRICA_BEARER_TOKEN = '';
 
 type ToolInput = Record<string, unknown>;
 
@@ -35,11 +35,12 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   log('Fetching tools list...');
   try {
-    const response = await fetch(FABRICA_TOOLBOX_URL, {
+    const response = await fetch(FABRICA_GATEWAY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream, application/json',
+        Authorization: `Bearer ${FABRICA_BEARER_TOKEN}`,
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
@@ -72,11 +73,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
 
     log(`Calling tool: ${name} with args=${JSON.stringify(args)}`);
-    const response = await fetch(FABRICA_TOOLBOX_URL, {
+    const response = await fetch(FABRICA_GATEWAY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream, application/json',
+        Authorization: `Bearer ${FABRICA_BEARER_TOKEN}`,
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
@@ -86,8 +88,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }),
     });
     if (!response.ok) {
-      log(`Error fetching tools list: ${response.status} ${response.statusText}`);
-      throw new Error(`Failed to fetch tools list: ${response.statusText}`);
+      log(`Error calling tool: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed calling tool: ${response.statusText}`);
     }
     const data = (await response.json()) as { result: any };
     log(`Tool response: ${JSON.stringify(data)}`);
@@ -116,42 +118,51 @@ async function runInstall(clientName: string, utbid: string) {
   const path = await import('node:path');
   const os = await import('node:os');
 
+  let configPath: string;
   if (clientName === 'claude') {
-    const configPath = path.join(os.homedir(), 'Library/Application Support/Claude/claude_desktop_config.json');
-    
-    try {
-      // Read the existing config file
-      const configData = await fs.readFile(configPath, 'utf8');
-      const config = JSON.parse(configData);
-      
-      // Ensure mcpServers object exists
-      if (!config.mcpServers) {
-        config.mcpServers = {};
-      }
-      
-      // Add or update the Fabrica-stdio entry
-      config.mcpServers["Fabrica-stdio"] = {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@fabrica.work/cli@latest",
-          "server",
-          utbid
-        ]
-      };
-      
-      // Write the updated config back to the file
-      await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');
-      log(`Successfully installed Fabrica Bridge for Claude`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      log(`Error installing for Claude: ${errorMessage}`);
-      throw error;
-    }
+    configPath = path.join(os.homedir(), '/Library/Application Support/Claude/claude_desktop_config.json');
+  } else if (clientName === 'cursor') {
+    configPath = path.join(os.homedir(), '/.cursor/mcp.json');
+  } else if (clientName === 'windsurf') {
+    configPath = path.join(os.homedir(), '/.codeium/windsurf/mcp_config.json');
   } else {
     log(`Installation not yet implemented for client: ${clientName}`);
     throw new Error(`Installation not yet implemented for client: ${clientName}`);
   }
+
+  // Update the client's config file with the new mcpServers entry.
+  try {
+    // Read the existing config file
+    const configData = await fs.readFile(configPath, 'utf8');
+    const config = JSON.parse(configData);
+    
+    // Ensure mcpServers object exists
+    if (!config.mcpServers) {
+      config.mcpServers = {};
+    }
+    
+    // Add or update the Fabrica-stdio entry
+    config.mcpServers["Fabrica-stdio"] = {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@fabrica.work/cli@latest",
+        "server",
+        utbid
+      ]
+    };
+    
+    // Write the updated config back to the file
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');
+    log(`Successfully updated ${clientName} config file at ${configPath}`);
+    log(`Fabrica Bridge installed for ${clientName}`);
+    log(`Please restart ${clientName} for the changes to take effect.`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log(`Error installing for Claude: ${errorMessage}`);
+    throw error;
+  }
+
 }
 
 // Parse command line arguments
@@ -170,7 +181,7 @@ if (command === 'server') {
   }
   
   // Set the full toolbox URL with the UTBID
-  FABRICA_TOOLBOX_URL = `${FABRICA_GATEWAY_URL}/${utbid}`;
+  FABRICA_BEARER_TOKEN = utbid;
   
   runServer().catch((error) => {
     log(`Fatal error running server: ${error}`);

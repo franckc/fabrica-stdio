@@ -14,7 +14,7 @@ Get your unique Toolbox ID (utbid) from Fabrica's gateway UI.
 
 Open a terminal and run:
 ```
-npx @fabrica.work/cli@latest install claude <utbid>
+npx -y @fabrica.work/cli@latest cli install claude <utbid>
 ```
 This should add an entry to Claude's MCP config under:
 ```
@@ -23,10 +23,29 @@ This should add an entry to Claude's MCP config under:
 Make sure to restart the Claude desktop app for the changes to take effect.
 
 ### Install for Cursor
+Open a terminal and run:
+```
+npx -y @fabrica.work/cli@latest cli install cursor <utbid>
+```
 
-TODO
+This should add an entry to Cursor's MCP config under:
+```
+~/.cursor/mcp.json
+```
+Make sure to restart the Cursor desktop app for the changes to take effect.
 
 ### Install for Windsurf
+Open a terminal and run:
+```
+npx -y @fabrica.work/cli@latest cli install windsurf <utbid>
+```
+
+This should add an entry to Windsurf's MCP config under:
+```
+~/.codeium/windsurf/mcp_config.json
+```
+Make sure to restart the Windsurf desktop app for the changes to take effect.
+
 
 ### install for VSCode
 
@@ -59,7 +78,7 @@ npm exec fabrica server
 
 To run the installation
 ```
-npm exec fabrica cli install claude myutbid
+npm exec fabrica cli install claude <utbid>
 ```
 
 To run under the MCP inspector, use the following command:
@@ -72,7 +91,7 @@ Replace `<utbid>` with the appropriate identifier for your use case.
 
 ### Environment variables
 
-FABRICA_TOOLBOX_BASEURL
+FABRICA_GATEWAY_URL
 Set to something like `http://localhost:3000/api/mcp` to use a local gateway server during development.
 
 
