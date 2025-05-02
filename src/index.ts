@@ -132,10 +132,31 @@ async function runInstall(clientName: string, utbid: string) {
 
   // Update the client's config file with the new mcpServers entry.
   try {
-    // Read the existing config file
-    const configData = await fs.readFile(configPath, 'utf8');
-    const config = JSON.parse(configData);
-    
+    // Try to read the existing config file if it exists
+    let config: Record<string, any> = {};
+    let configData: string;
+    try {
+      configData = await fs.readFile(configPath, 'utf8');
+    } catch (error) {
+      // If file doesn't exist, create a new empty one
+      log(`Config file doesn't exist. Creating new config at ${configPath}.`)
+      const configDir = path.dirname(configPath);
+      await fs.mkdir(configDir, { recursive: true });
+      configData = '{}';
+    }
+
+    // Parse the existing config file
+    try {
+      config = JSON.parse(configData);
+    } catch (error) {
+      // Exit the process if the config file is not valid JSON
+      log(`Error parsing the JSON config file ${configPath}`)
+      log(error instanceof Error ? error.message : String(error));
+      log(`Please fix the error in the JSON config file (or alternatively delete it), then retry.`);
+      log(`Exiting.`);
+      process.exit(1);
+    }
+
     // Ensure mcpServers object exists
     if (!config.mcpServers) {
       config.mcpServers = {};
@@ -145,10 +166,10 @@ async function runInstall(clientName: string, utbid: string) {
     config.mcpServers["Fabrica-stdio"] = {
       "command": "npx",
       "args": [
-        "-y",
-        "@fabrica.work/cli@latest",
-        "server",
-        utbid
+      "-y",
+      "@fabrica.work/cli@latest",
+      "server",
+      utbid
       ]
     };
     

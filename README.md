@@ -47,7 +47,7 @@ This should add an entry to Windsurf's MCP config under:
 Make sure to restart the Windsurf desktop app for the changes to take effect.
 
 
-### install for VSCode
+### Install for VSCode
 
 Follow instructions at: https://code.visualstudio.com/docs/copilot/chat/mcp-servers
 The command to run to start the server is:
@@ -135,7 +135,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Additional Resources
 
-- [Fabrica Documentation](https://fabrica.work/docs)
+- [Fabrica](https://fabrica.work)
 - [MCP Protocol Specification](https://modelcontextprotocol.org/spec)
 
 
