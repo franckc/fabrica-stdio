@@ -186,12 +186,42 @@ async function runInstall(clientName: string, utbid: string) {
 
 }
 
+// Help message function
+function printHelp() {
+  const cmd = 'npx -y @fabrica.work/cli@latest';
+  console.log(`
+Fabrica Bridge CLI Usage:
+
+  ${cmd} server <UTBID>
+    Start the Fabrica Bridge server with the given UTBID (Fabrica Toolbox Bearer Token).
+
+  ${cmd} cli install <client> <UTBID>
+    Install Fabrica Bridge for a supported client (claude, cursor, windsurf) with the given UTBID.
+
+Options:
+  --help    Show this help message.
+
+Examples:
+  ${cmd} server <UTBID>
+  ${cmd} cli install claude <UTBID>
+`);
+}
+
 // Parse command line arguments
 const argv = process.argv.slice(2); // Remove node and script path
 const command = argv[0]; // Extract the command (server or cli)
-if (!command) {
-  log('Error: No command provided. Please specify either "server" or "cli" as the first argument.');
-  process.exit(1);
+
+// Show help if no command, or --help is provided as the only argument
+if (!command || command === '--help') {
+  printHelp();
+  process.exit(0);
+}
+
+// Show help if 'cli --help' or 'server --help' is provided
+if ((command === 'cli' || command === 'server') && (argv.length < 2 || argv[1] === '--help')) {
+  console.log('Missing required arguments for the command.');
+  printHelp();
+  process.exit(0);
 }
 
 if (command === 'server') {
